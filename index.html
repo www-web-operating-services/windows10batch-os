@@ -246,13 +246,13 @@ iframe{
 let audioStarted=false;
 
 function startAudio(){
- if(!audioStarted){
-  let a=document.getElementById("bgSound");
-  a.volume=0.4;
-  a.play().catch(()=>{});
-  audioStarted=true;
- }
-}
+  let a = document.getElementById("bgSound");
+
+  if(a.paused){
+    a.volume = 0.4;
+    a.play().catch(()=>{});
+  }
+  }
 
 /* TIME */
 setInterval(()=>{
