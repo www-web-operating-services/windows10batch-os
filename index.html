@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KCNX OS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",sans-serif;}
+body{overflow:hidden;background:black;color:white}
+
+/* MAIN */
+#main{
+  width:100%;height:100vh;
+  background:url('https://i.ibb.co/PZkTNWgp/peakpx-1.jpg') no-repeat center/cover;
+  position:relative;
+}
+
+/* START BUTTON */
+.start-btn{
+  position:absolute;bottom:20px;right:20px;
+  padding:10px 14px;background:rgba(255,255,255,0.8);
+  border:none;cursor:pointer;
+}
+
+/* BLUR */
+#blurLayer{
+  position:absolute;width:100%;height:100%;
+  backdrop-filter:blur(15px);
+  background:rgba(0,0,0,0.4);
+  display:none;justify-content:center;align-items:center;
+}
+
+/* LOGIN */
+.login-container{text-align:center}
+.profile-img{
+  width:90px;height:90px;border-radius:50%;
+  object-fit:cover;margin-bottom:10px;
+}
+.username{margin-bottom:10px}
+
+.login-box{display:flex;background:rgba(0,0,0,0.6);padding:8px}
+.login-box input{
+  border:none;outline:none;padding:10px;
+  background:transparent;color:white;width:200px;
+}
+
+.arrow-btn{
+  border:none;background:transparent;color:white;
+  font-size:18px;cursor:pointer;
+}
+
+/* SHAKE */
+@keyframes shake{
+0%{transform:translateX(0)}
+25%{transform:translateX(-5px)}
+50%{transform:translateX(5px)}
+75%{transform:translateX(-5px)}
+100%{transform:translateX(0)}
+}
+.shake{animation:shake 0.3s}
+
+/* LOADING */
+#loading{
+  display:none;width:100%;height:100vh;background:black;
+  justify-content:center;align-items:center;
+}
+.spinner{
+  width:50px;height:50px;border:5px solid #444;
+  border-top:5px solid white;border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{100%{transform:rotate(360deg)}}
+
+/* DESKTOP */
+#desktop{
+  display:none;width:100%;height:100vh;
+  background:url('https://i.ibb.co/BKzS8P5y/peakpx.jpg') no-repeat center/cover;
+  position:relative;
+}
+
+/* DESKTOP ICONS */
+#desktopIcons{
+  position:absolute;
+  top:20px;
+  left:20px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+.desktop-icon{
+  width:70px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.desktop-icon img{
+  width:40px;
+}
+
+.desktop-icon span{
+  display:block;
+  font-size:12px;
+  margin-top:5px;
+}
+
+.desktop-icon:hover{
+  background:rgba(255,255,255,0.2);
+  border-radius:5px;
+}
+
+/* TASKBAR */
+#taskbar{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:50px;
+  background:rgba(0,0,0,0.75);
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+}
+
+/* LEFT SIDE */
+.task-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.win-btn{
+  width:40px;
+  text-align:center;
+  cursor:pointer;
+  font-size:18px;
+}
+
+/* APP ICON */
+.task-app img{
+  width:22px;
+  cursor:pointer;
+}
+
+/* CLOCK */
+#taskTime{
+  margin-left:auto;
+  padding-right:10px;
+}
+
+/* WINDOW */
+.window{
+  position:absolute;
+  top:50px;left:100px;
+  width:70%;height:70%;
+  background:white;color:black;
+  display:none;
+  flex-direction:column;
+  border-radius:6px;
+  overflow:hidden;
+}
+
+/* WINDOW BAR */
+.window-bar{
+  background:#ddd;
+  padding:5px;
+  font-weight:bold;
+}
+
+/* IFRAME */
+iframe{
+  flex:1;border:none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- AUDIO -->
+<audio id="bgSound" loop>
+<source src="https://files.catbox.moe/q7zjvr.mp3">
+</audio>
+
+<!-- MAIN -->
+<div id="main" onclick="startAudio()">
+  <button class="start-btn" onclick="showLogin(event)">>>></button>
+
+  <div id="blurLayer" onclick="closeBlur(event)">
+    <div class="login-container" onclick="event.stopPropagation()">
+
+      <img src="https://i.ibb.co/4pDNDk1/avatar.png" class="profile-img">
+      <div class="username">admin</div>
+
+      <div class="login-box" id="loginBox">
+        <input type="password" id="pass">
+        <button class="arrow-btn" onclick="checkPass()">→</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading"><div class="spinner"></div></div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+
+  <!-- DESKTOP ICONS -->
+  <div id="desktopIcons">
+
+    <div class="desktop-icon" onclick="openRecycle()">
+      <img src="https://cdn-icons-png.flaticon.com/512/3096/3096673.png">
+      <span>Recycle Bin</span>
+    </div>
+
+    <div class="desktop-icon" onclick="openEdge()">
+      <img src="https://cdn-icons-png.flaticon.com/512/732/732221.png">
+      <span>Microsoft Edge</span>
+    </div>
+
+  </div>
+
+  <!-- EDGE WINDOW -->
+  <div id="edgeWin" class="window">
+    <div class="window-bar">Microsoft Edge</div>
+    <iframe src="https://www.bing.com"></iframe>
+  </div>
+
+  <!-- TASKBAR -->
+  <div id="taskbar">
+    <div class="task-left">
+      <div class="win-btn">🪟</div>
+
+      <div class="task-app" onclick="openEdge()">
+        <img src="https://cdn-icons-png.flaticon.com/512/732/732221.png">
+      </div>
+    </div>
+
+    <div id="taskTime"></div>
+  </div>
+
+</div>
+
+<script>
+let audioStarted=false;
+
+function startAudio(){
+ if(!audioStarted){
+  let a=document.getElementById("bgSound");
+  a.volume=0.4;
+  a.play().catch(()=>{});
+  audioStarted=true;
+ }
+}
+
+/* TIME */
+setInterval(()=>{
+ let now=new Date();
+ document.getElementById("taskTime").innerText=
+  now.toLocaleTimeString();
+},1000);
+
+/* LOGIN */
+function showLogin(e){
+ e.stopPropagation();
+ document.getElementById("blurLayer").style.display="flex";
+}
+
+function closeBlur(){
+ document.getElementById("blurLayer").style.display="none";
+}
+
+function checkPass(){
+ let p=document.getElementById("pass").value;
+ let box=document.getElementById("loginBox");
+
+ if(p==="12345"){
+  document.getElementById("main").style.display="none";
+  document.getElementById("loading").style.display="flex";
+
+  setTimeout(()=>{
+    document.getElementById("loading").style.display="none";
+    document.getElementById("desktop").style.display="block";
+  },2000);
+
+ } else {
+  box.classList.add("shake");
+  setTimeout(()=>box.classList.remove("shake"),300);
+  document.getElementById("pass").value="";
+ }
+}
+
+/* EDGE */
+function openEdge(){
+ document.getElementById("edgeWin").style.display="flex";
+}
+
+/* RECYCLE BIN */
+function openRecycle(){
+ window.open("PASTE_YOUR_LINK_HERE", "_blank");
+}
+</script>
+
+</body>
+</html>
