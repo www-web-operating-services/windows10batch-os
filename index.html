@@ -243,16 +243,17 @@ iframe{
 </div>
 
 <script>
-let audioStarted=false;
+
+    let audioPlayed = false;
 
 function startAudio(){
-  let a = document.getElementById("bgSound");
-
-  if(a.paused){
+  if(!audioPlayed){
+    let a = document.getElementById("bgSound");
     a.volume = 0.4;
     a.play().catch(()=>{});
+    audioPlayed = true;
   }
-  }
+}
 
 /* TIME */
 setInterval(()=>{
