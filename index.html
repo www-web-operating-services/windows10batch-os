@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CRESTLINK PAY · International Payment System</title>
+    <style>
+        :root {
+            --bg-primary: #f5f7fc;
+            --bg-secondary: #eef1f7;
+            --bg-card: #ffffff;
+            --text-primary: #1a1c2e;
+            --text-secondary: #5f6478;
+            --accent: #4f6ef7;
+            --accent-glow: #7388ff;
+            --gold: #d9a406;
+            --gold-glow: #f5c542;
+            --success: #0f9d58;
+            --danger: #e5484d;
+            --warning: #e8841a;
+            --border: #d9dfeb;
+            --input-bg: #f8faff;
+            --shadow: 0 10px 28px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0,0,0,0.02);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --transition: 0.25s cubic-bezier(0.3, 0, 0.1, 1);
+            --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .dark-mode {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #12122a;
+            --bg-card: #1a1a3e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0c0;
+            --border: #2a2a5a;
+            --input-bg: #0f0f2a;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        body::-webkit-scrollbar { width: 5px; }
+        body::-webkit-scrollbar-track { background: var(--bg-primary); }
+        body::-webkit-scrollbar-thumb { background: #b0b8cc; border-radius: 20px; }
+
+        .screen { display: none; min-height: 100vh; width: 100%; animation: fadeIn 0.35s ease; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+        @keyframes dotPulse { 0%,100% { transform: scale(0.5); opacity: 0.3; } 50% { transform: scale(1.2); opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes tickAppear { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes bubblePop { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .brand-logo {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e2b5e, #4f6ef7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .brand-sub { color: var(--text-secondary); font-size: 0.8rem; text-align: center; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; font-weight: 500; }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: background 0.25s, border 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 13px 15px;
+            background: var(--input-bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.2s;
+            font-family: var(--font);
+            resize: vertical;
+        }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,110,247,0.12); }
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+            font-family: var(--font);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        .btn-primary { background: #4f6ef7; color: white; box-shadow: 0 6px 14px rgba(79,110,247,0.25); }
+        .btn-primary:hover { background: #3a5ae0; transform: translateY(-1px); }
+        .btn-gold { background: #f5c542; color: #1a1a2e; box-shadow: 0 6px 14px rgba(245,197,66,0.3); }
+        .btn-gold:hover { background: #e0b12f; }
+        .btn-danger { background: #e5484d; color: white; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-primary); }
+        .btn-sm { padding: 8px 14px; font-size: 0.75rem; width: auto; border-radius: 8px; }
+        .link { color: var(--accent); text-decoration: none; cursor: pointer; font-weight: 600; }
+        .link:hover { text-decoration: underline; }
+
+        .dotted-loader { display: flex; gap: 6px; justify-content: center; padding: 18px; }
+        .dotted-loader .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: dotPulse 1.1s infinite; }
+        .dotted-loader .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dotted-loader .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 15px auto; }
+
+        .mpin-boxes { display: flex; gap: 10px; justify-content: center; margin: 18px 0; }
+        .mpin-boxes input {
+            width: 52px; height: 52px; text-align: center; font-size: 1.6rem; font-weight: 700;
+            background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 12px;
+            color: var(--text-primary); outline: none; caret-color: transparent; transition: 0.2s;
+        }
+        .mpin-boxes input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,110,247,0.2); }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; width: 100%; max-width: 500px; margin-top: 10px; }
+        .menu-item {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+            padding: 16px 8px; text-align: center; cursor: pointer; transition: 0.2s; font-weight: 500;
+        }
+        .menu-item:hover { border-color: var(--accent); box-shadow: 0 6px 14px rgba(79,110,247,0.1); }
+        .menu-item .icon { font-size: 1.8rem; margin-bottom: 6px; }
+
+        .balance-display { font-size: 2.2rem; font-weight: 800; color: #1e2b5e; text-align: center; margin: 12px 0; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; }
+        .badge-success { background: #e2f5ea; color: #0f9d58; }
+        .badge-danger { background: #fde2e3; color: #d3282d; }
+        .badge-warning { background: #fef1d8; color: #b45f06; }
+
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .admin-table th, .admin-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+
+        .version-info { font-size: 0.65rem; color: var(--text-secondary); text-align: center; margin-top: 16px; }
+        .os-detect { font-size: 0.6rem; color: #8e94a8; text-align: center; }
+
+        .toggle-switch { position: relative; width: 44px; height: 24px; display: inline-block; }
+        .toggle-switch input { display: none; }
+        .toggle-slider { position: absolute; inset: 0; background: #c3c9d8; border-radius: 24px; transition: 0.2s; }
+        .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+        .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; border-radius: 18px; padding: 20px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+
+        .success-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); z-index: 2000; display: none; }
+        .success-popup .tick { width: 80px; height: 80px; border-radius: 50%; background: #4CAF50; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; animation: tickAppear 0.4s ease forwards; }
+        .success-popup .tick svg { width: 40px; height: 40px; fill: white; }
+
+        @media (max-width: 480px) {
+            .menu-grid { grid-template-columns: repeat(auto-fill, minmax(100px,1fr)); }
+            .brand-logo { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast-container" id="toastContainer" style="position:fixed; top:20px; right:20px; z-index:3000; display:flex; flex-direction:column; gap:8px;"></div>
+
+    <!-- SPLASH SCREEN -->
+    <div class="screen active" id="splashScreen">
+        <div class="text-center">
+            <div class="brand-logo" style="font-size:2.8rem;">CRESTLINK PAY</div>
+            <div class="brand-sub">Secure Global Transactions</div>
+            <div class="dotted-loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <div class="version-info">v1.102.26</div>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div class="screen" id="loginScreen">
+        <div class="card">
+            <div class="brand-logo" style="font-size:1.8rem;">CRESTLINK PAY</div>
+            <div class="brand-sub">Account Login</div>
+            <div class="input-group"><label>IPBN (International Payment Bank Number)</label><input type="text" id="loginIpb" placeholder="CLPXXXXXXXX" maxlength="11"></div>
+            <div class="input-group"><label>SPC (Safety Pin Code)</label><input type="password" id="loginSpc" placeholder="Enter your SPC"></div>
+            <button class="btn btn-primary" onclick="handleLogin()">Login</button>
+            <div class="text-center mt-8"><span class="link" onclick="showScreen('registerScreen')">Create New Account</span></div>
+            <div class="text-center" style="margin-top:10px;"><span class="link" style="font-size:0.8rem;" onclick="showScreen('adminLoginScreen')">🔐 Central Bank Admin</span></div>
+        </div>
+    </div>
+
+    <!-- REGISTER SCREEN -->
+    <div class="screen" id="registerScreen">
+        <div class="card" style="max-width:460px;">
+            <div class="brand-logo" style="font-size:1.5rem;">Registration</div>
+            <div class="input-group"><label>Full Name</label><input type="text" id="regName" placeholder="Full name"></div>
+            <div class="input-group"><label>Email / Phone</label><input type="text" id="regEmail" placeholder="Email or phone"></div>
+            <div class="input-group"><label>Date of Birth (DD/MM/YYYY)</label><input type="text" id="regDob" placeholder="DD/MM/YYYY" maxlength="10"></div>
+            <div class="input-group"><label>Safety Pin (SPC)</label><input type="password" id="regSpc" placeholder="Create safety pin"></div>
+            <div class="input-group"><label>Region</label>
+                <select id="regRegion">
+                    <option value="">Select Region</option>
+                    <option value="India">🇮🇳 India</option>
+                    <option value="USA">🇺🇸 USA</option>
+                    <option value="UK">🇬🇧 UK</option>
+                    <option value="Europe">🇪🇺 Europe</option>
+                    <option value="Japan">🇯🇵 Japan</option>
+                    <option value="Canada">🇨🇦 Canada</option>
+                    <option value="Australia">🇦🇺 Australia</option>
+                    <option value="UAE">🇦🇪 UAE</option>
+                </select>
+            </div>
+            <button class="btn btn-gold" onclick="handleRegister()">Submit & Generate IPBN</button>
+            <div class="text-center mt-8"><span class="link" onclick="showScreen('loginScreen')">← Back to Login</span></div>
+        </div>
+    </div>
+
+    <!-- MPIN SETUP SCREEN -->
+    <div class="screen" id="mpinSetupScreen">
+        <div class="card">
+            <h3 style="text-align:center;">Set Your MPIN</h3>
+            <p style="text-align:center; color:var(--text-secondary);">Create a 4-digit Mobile PIN</p>
+            <div class="mpin-boxes" id="setupMpinBoxes">
+                <input type="password" maxlength="1" class="setup-mpin-input" data-index="0">
+                <input type="password" maxlength="1" class="setup-mpin-input" data-index="1">
+                <input type="password" maxlength="1" class="setup-mpin-input" data-index="2">
+                <input type="password" maxlength="1" class="setup-mpin-input" data-index="3">
+            </div>
+            <button class="btn btn-primary" onclick="confirmSetupMpin()">Confirm MPIN</button>
+        </div>
+    </div>
+
+    <!-- MPIN LOGIN SCREEN -->
+    <div class="screen" id="mpinScreen">
+        <div class="card">
+            <h3 style="text-align:center;">Enter MPIN</h3>
+            <p style="text-align:center; color:var(--text-secondary);">Enter your 4-digit Mobile PIN</p>
+            <div class="mpin-boxes" id="loginMpinBoxes">
+                <input type="password" maxlength="1" class="login-mpin-input" data-index="0">
+                <input type="password" maxlength="1" class="login-mpin-input" data-index="1">
+                <input type="password" maxlength="1" class="login-mpin-input" data-index="2">
+                <input type="password" maxlength="1" class="login-mpin-input" data-index="3">
+            </div>
+            <button class="btn btn-primary" onclick="handleMpinLogin()">Verify</button>
+            <div class="text-center mt-8"><span class="link" onclick="showScreen('loginScreen')">← Cancel</span></div>
+        </div>
+    </div>
+
+    <!-- USER DASHBOARD -->
+    <div class="screen" id="dashboardScreen">
+        <div style="width:100%; max-width:550px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="brand-logo" style="font-size:1.2rem;">CRESTLINK</span>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-sm btn-outline" onclick="toggleTheme()">🌓</button>
+                    <button class="btn btn-sm btn-outline" onclick="logoutUser()">Logout</button>
+                </div>
+            </div>
+            <div class="card" style="text-align:center; margin-top:8px;">
+                <span id="dashUserInfo" style="font-size:0.75rem; color:var(--text-secondary);"></span>
+                <div class="balance-display" id="dashBalance">₹ 0.00</div>
+                <div id="dashCurrencyLabel" style="font-size:0.75rem;">INR</div>
+                <button class="btn btn-gold btn-sm" onclick="openTransferModal()">💸 Send Money</button>
+            </div>
+            <div class="menu-grid" id="dashMenu">
+                <div class="menu-item" onclick="showProfileView()"><div class="icon">👤</div>Profile</div>
+                <div class="menu-item" onclick="showSettingsView()"><div class="icon">⚙️</div>Settings</div>
+                <div class="menu-item" onclick="showLoanView()"><div class="icon">🏦</div>Loans</div>
+                <div class="menu-item" onclick="showHistoryView()"><div class="icon">📜</div>History</div>
+                <div class="menu-item" onclick="showNotificationsView()"><div class="icon">🔔</div>Alerts</div>
+            </div>
+            <div id="dashboardSubView"></div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN SCREEN -->
+    <div class="screen" id="adminLoginScreen">
+        <div class="card">
+            <div class="brand-logo" style="font-size:1.6rem;">🏦 Central Bank Admin</div>
+            <div class="input-group"><label>Master Key</label><input type="password" id="adminMasterKey" placeholder="Enter master key"></div>
+            <button class="btn btn-gold" onclick="handleAdminLogin()">Access Admin Panel</button>
+            <div class="text-center mt-8"><span class="link" onclick="showScreen('loginScreen')">← User Login</span></div>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div class="screen" id="adminDashboardScreen">
+        <div style="width:100%; max-width:900px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="brand-logo" style="font-size:1.4rem;">🏦 Admin Panel</span>
+                <button class="btn btn-sm btn-danger" onclick="adminLogout()">Logout</button>
+            </div>
+            <div class="tab-bar" id="adminTabs" style="display:flex; gap:8px; margin:12px 0; flex-wrap:wrap;">
+                <button class="tab active" data-tab="users" onclick="switchAdminTab('users')">👥 Users</button>
+                <button class="tab" data-tab="transactions" onclick="switchAdminTab('transactions')">📜 Transactions</button>
+                <button class="tab" data-tab="requests" onclick="switchAdminTab('requests')">📋 Requests</button>
+                <button class="tab" data-tab="loans" onclick="switchAdminTab('loans')">🏦 Loans</button>
+                <button class="tab" data-tab="logs" onclick="switchAdminTab('logs')">🔐 Server Logs</button>
+                <button class="tab" data-tab="currencies" onclick="switchAdminTab('currencies')">💱 Currency</button>
+            </div>
+            <div id="adminTabContent"></div>
+        </div>
+    </div>
+
+    <!-- TRANSFER MODAL -->
+    <div class="modal-overlay" id="transferModal">
+        <div class="modal-content">
+            <h3>Transfer Money</h3>
+            <input type="text" id="transferIpb" placeholder="Recipient IPBN" style="width:100%; margin:8px 0; padding:10px;">
+            <input type="number" id="transferAmount" placeholder="Amount" style="width:100%; margin:8px 0; padding:10px;">
+            <button class="btn btn-primary" onclick="processTransfer()">Send</button>
+            <button class="btn btn-outline" onclick="closeTransferModal()" style="margin-top:8px;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- LOAN MODAL -->
+    <div class="modal-overlay" id="loanModal">
+        <div class="modal-content">
+            <h3>Request Loan</h3>
+            <input type="number" id="loanAmount" placeholder="Amount (min 100, max 1,00,00,000)" style="width:100%; margin:8px 0; padding:10px;" min="100" max="10000000">
+            <textarea id="loanPurpose" rows="4" placeholder="Briefly explain the purpose and appeal for this loan..." style="width:100%; margin:8px 0; padding:10px;"></textarea>
+            <button class="btn btn-gold" onclick="submitLoanRequest()">Submit</button>
+            <button class="btn btn-outline" onclick="closeLoanModal()" style="margin-top:8px;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- SUCCESS POPUP -->
+    <div class="success-popup" id="successPopup">
+        <div class="tick">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <h2 style="color:#4CAF50; margin-bottom:10px;">Transfer Successful!</h2>
+        <p id="successMessage" style="margin-bottom:20px;"></p>
+        <button class="btn btn-primary" onclick="closeSuccessPopup()">OK</button>
+    </div>
+
+    <script>
+        // ==================== DATA LAYER ====================
+        const MASTER_KEY = 'xiyivoz11';
+        const APP_VERSION = '1.102.26';
+        const DAILY_TRANSFER_LIMIT = 1000000; // 10,00,000
+        const LOAN_MIN = 100;
+        const LOAN_MAX = 10000000; // 1,00,00,000
+
+        function getUsers() { return JSON.parse(localStorage.getItem('crestlink_users') || '[]'); }
+        function saveUsers(u) { localStorage.setItem('crestlink_users', JSON.stringify(u)); }
+        function getTransactions() { return JSON.parse(localStorage.getItem('crestlink_transactions') || '[]'); }
+        function saveTransactions(t) { localStorage.setItem('crestlink_transactions', JSON.stringify(t)); }
+        function getNotifications() { return JSON.parse(localStorage.getItem('crestlink_notifications') || '[]'); }
+        function saveNotifications(n) { localStorage.setItem('crestlink_notifications', JSON.stringify(n)); }
+        function getRequests() { return JSON.parse(localStorage.getItem('crestlink_requests') || '[]'); }
+        function saveRequests(r) { localStorage.setItem('crestlink_requests', JSON.stringify(r)); }
+        function getLoans() { return JSON.parse(localStorage.getItem('crestlink_loans') || '[]'); }
+        function saveLoans(l) { localStorage.setItem('crestlink_loans', JSON.stringify(l)); }
+        function getCurrencies() { return JSON.parse(localStorage.getItem('crestlink_currencies') || 'null') || defaultCurrencies(); }
+        function saveCurrencies(c) { localStorage.setItem('crestlink_currencies', JSON.stringify(c)); }
+        function getAdminLogs() { return JSON.parse(localStorage.getItem('crestlink_admin_logs') || '[]'); }
+        function addAdminLog(action, detail) {
+            const logs = getAdminLogs();
+            logs.push({ timestamp: new Date().toLocaleString(), action, detail });
+            localStorage.setItem('crestlink_admin_logs', JSON.stringify(logs));
+        }
+        function defaultCurrencies() {
+            return {
+                India: { code: 'INR', symbol: '₹', name: 'Indian Rupee', rate: 1 },
+                USA: { code: 'USD', symbol: '$', name: 'US Dollar', rate: 0.012 },
+                UK: { code: 'GBP', symbol: '£', name: 'British Pound', rate: 0.0095 },
+                Europe: { code: 'EUR', symbol: '€', name: 'Euro', rate: 0.011 },
+                Japan: { code: 'JPY', symbol: '¥', name: 'Japanese Yen', rate: 1.75 },
+                Canada: { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar', rate: 0.016 },
+                Australia: { code: 'AUD', symbol: 'A$', name: 'Australian Dollar', rate: 0.018 },
+                UAE: { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham', rate: 0.044 }
+            };
+        }
+        function getCurrentUser() { const ipb = localStorage.getItem('crestlink_current_user'); return getUsers().find(u => u.ipbn === ipb && u.active !== false) || null; }
+        function setCurrentUser(ipbn) { localStorage.setItem('crestlink_current_user', ipbn); }
+        function getCurrencyForRegion(region) { return getCurrencies()[region] || { code: 'INR', symbol: '₹', rate: 1 }; }
+        function formatCurrency(amount, region) { const c = getCurrencyForRegion(region); return c.symbol + ' ' + Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function generateIpbn() { let r = 'CLP'; for (let i = 0; i < 8; i++) r += Math.floor(Math.random() * 10); return r; }
+        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+        function getDeviceOS() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Windows')) return 'Windows';
+            if (ua.includes('Mac')) return 'macOS';
+            if (ua.includes('Linux')) return 'Linux';
+            if (ua.includes('Android')) return 'Android';
+            if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+            return 'Unknown';
+        }
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.textContent = msg;
+            toast.style.cssText = 'background:#1e2b5e;color:white;padding:12px 18px;border-radius:30px;box-shadow:0 6px 14px rgba(0,0,0,0.15);font-size:0.8rem;';
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('crestlink_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        // Sound effect using Web Audio API
+        function playBubbleSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch (e) { console.log('Audio not supported'); }
+        }
+
+        function showSuccessPopup(message) {
+            const popup = document.getElementById('successPopup');
+            document.getElementById('successMessage').textContent = message;
+            popup.style.display = 'block';
+            // Play bubble sound exactly when tick appears (CSS animation)
+            setTimeout(playBubbleSound, 100); // slight delay to sync with tick animation
+            setTimeout(() => popup.style.display = 'none', 3000);
+        }
+        function closeSuccessPopup() { document.getElementById('successPopup').style.display = 'none'; }
+
+        // ==================== INIT ====================
+        (function init() {
+            if (!localStorage.getItem('crestlink_currencies')) saveCurrencies(defaultCurrencies());
+            if (localStorage.getItem('crestlink_theme') === 'dark') document.body.classList.add('dark-mode');
+            setTimeout(() => showScreen('loginScreen'), 2000);
+        })();
+
+        // ==================== LOGIN ====================
+        function handleLogin() {
+            const ipb = document.getElementById('loginIpb').value.trim().toUpperCase();
+            const spc = document.getElementById('loginSpc').value.trim();
+            if (!ipb || !spc) { showToast('Please enter IPBN and SPC', 'danger'); return; }
+            const user = getUsers().find(u => u.ipbn === ipb && u.spc === spc && u.active !== false);
+            if (!user) { showToast('Invalid IPBN or SPC', 'danger'); return; }
+            setCurrentUser(ipb);
+            addAdminLog('User Login', `${user.name} (${ipb}) entered SPC`);
+            document.getElementById('loginIpb').value = '';
+            document.getElementById('loginSpc').value = '';
+            showScreen('mpinScreen');
+            document.querySelectorAll('.login-mpin-input').forEach(i => i.value = '');
+            document.querySelector('.login-mpin-input').focus();
+        }
+
+        // ==================== MPIN HANDLING ====================
+        function setupMpinInputs(containerId, inputClass, callback) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const inputs = container.querySelectorAll(inputClass);
+            inputs.forEach((inp, idx) => {
+                inp.addEventListener('input', () => {
+                    inp.value = inp.value.replace(/[^0-9]/g, '');
+                    if (inp.value.length === 1) {
+                        if (idx < inputs.length - 1) inputs[idx + 1].focus();
+                        else if (callback) callback(Array.from(inputs).map(i => i.value).join(''));
+                    }
+                });
+                inp.addEventListener('keydown', e => {
+                    if (e.key === 'Backspace' && !inp.value && idx > 0) {
+                        inputs[idx - 1].focus();
+                        inputs[idx - 1].value = '';
+                    }
+                });
+            });
+        }
+        setupMpinInputs('loginMpinBoxes', '.login-mpin-input', (val) => handleMpinLogin(val));
+        setupMpinInputs('setupMpinBoxes', '.setup-mpin-input', null);
+
+        function handleMpinLogin(preVal) {
+            const inputs = document.querySelectorAll('.login-mpin-input');
+            const mpin = preVal || Array.from(inputs).map(i => i.value).join('');
+            if (mpin.length !== 4) { showToast('Enter 4-digit MPIN'); return; }
+            const user = getCurrentUser();
+            if (!user || user.mpin !== mpin) {
+                showToast('Incorrect MPIN', 'danger');
+                inputs.forEach(i => i.value = '');
+                inputs[0].focus();
+                return;
+            }
+            addAdminLog('MPIN Login', `${user.name} (${user.ipbn})`);
+            showDashboard();
+            showToast(`Welcome back, ${user.name}!`, 'success');
+        }
+
+        // ==================== REGISTRATION ====================
+        function handleRegister() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const dob = document.getElementById('regDob').value.trim();
+            const spc = document.getElementById('regSpc').value.trim();
+            const region = document.getElementById('regRegion').value;
+            if (!name || !email || !dob || !spc || !region) { showToast('Please fill all fields', 'danger'); return; }
+            if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dob)) { showToast('DOB must be DD/MM/YYYY', 'danger'); return; }
+            if (spc.length < 4) { showToast('Safety Pin must be at least 4 characters', 'danger'); return; }
+            const users = getUsers();
+            if (users.some(u => u.email === email)) { showToast('Email/Phone already registered', 'danger'); return; }
+            const ipbn = generateIpbn();
+            const newUser = {
+                ipbn, name, email, dob, spc, mpin: '', region,
+                balance: 0, active: true, createdAt: new Date().toISOString(), loanLimit: 5000
+            };
+            users.push(newUser);
+            saveUsers(users);
+            setCurrentUser(ipbn);
+            addAdminLog('New Registration', `${name} (${ipbn})`);
+            document.querySelectorAll('.setup-mpin-input').forEach(i => i.value = '');
+            showScreen('mpinSetupScreen');
+            document.querySelector('.setup-mpin-input').focus();
+            showToast('Account created! Set your MPIN.', 'success');
+        }
+
+        function confirmSetupMpin() {
+            const inputs = document.querySelectorAll('.setup-mpin-input');
+            const mpin = Array.from(inputs).map(i => i.value).join('');
+            if (mpin.length !== 4) { showToast('Enter 4-digit MPIN'); return; }
+            const user = getCurrentUser();
+            if (!user) { showToast('Error, please register again', 'danger'); showScreen('registerScreen'); return; }
+            const users = getUsers();
+            const idx = users.findIndex(u => u.ipbn === user.ipbn);
+            if (idx !== -1) { users[idx].mpin = mpin; saveUsers(users); }
+            showToast('MPIN set successfully!', 'success');
+            showDashboard();
+        }
+
+        // ==================== DASHBOARD ====================
+        function showDashboard() {
+            const user = getCurrentUser();
+            if (!user) { showScreen('loginScreen'); return; }
+            document.getElementById('dashUserInfo').textContent = `${user.name} · IPBN: ${user.ipbn}`;
+            const curr = getCurrencyForRegion(user.region);
+            document.getElementById('dashBalance').textContent = formatCurrency(user.balance, user.region);
+            document.getElementById('dashCurrencyLabel').textContent = curr.code;
+            document.getElementById('dashboardSubView').innerHTML = '';
+            showScreen('dashboardScreen');
+        }
+
+        // ==================== MENU VIEWS ====================
+        function showProfileView() {
+            const user = getCurrentUser(); if (!user) return;
+            const curr = getCurrencyForRegion(user.region);
+            document.getElementById('dashboardSubView').innerHTML = `
+                <div class="card">
+                    <h3 style="text-align:center;">👤 ${user.name}</h3>
+                    <p>IPBN: ${user.ipbn}</p>
+                    <p>Email: ${user.email}</p>
+                    <p>DOB: ${user.dob}</p>
+                    <p>Region: ${user.region}</p>
+                    <p>Balance: ${formatCurrency(user.balance, user.region)}</p>
+                    <p>Member Since: ${new Date(user.createdAt).toLocaleDateString()}</p>
+                </div>`;
+        }
+        function showSettingsView() {
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('dashboardSubView').innerHTML = `
+                <div class="card">
+                    <h3>⚙️ Settings</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
+                        <span>Dark Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${isDark ? 'checked' : ''} onchange="toggleTheme()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <button class="btn btn-danger" onclick="requestAccountDeletion()">🗑️ Delete Account</button>
+                </div>`;
+        }
+        function showLoanView() {
+            const user = getCurrentUser(); if (!user) return;
+            const loans = getLoans().filter(l => l.userIpb === user.ipbn);
+            document.getElementById('dashboardSubView').innerHTML = `
+                <div class="card">
+                    <h3>🏦 Loans</h3>
+                    <button class="btn btn-gold btn-sm" onclick="openLoanModal()">+ Request New Loan</button>
+                    <div style="margin-top:10px;">
+                        ${loans.length === 0 ? 'No loan requests yet.' : loans.map(l => `
+                            <div style="border-bottom:1px solid #eee; padding:8px;">
+                                <strong>${formatCurrency(l.amount, user.region)}</strong> - ${l.status}
+                                <div style="font-size:0.7rem;">${l.purpose || 'No purpose'}</div>
+                            </div>`).join('')}
+                    </div>
+                </div>`;
+        }
+        function showHistoryView() {
+            const user = getCurrentUser(); if (!user) return;
+            const txs = getTransactions().filter(t => t.fromIpb === user.ipbn || t.toIpb === user.ipbn).slice(-20).reverse();
+            document.getElementById('dashboardSubView').innerHTML = `
+                <div class="card">
+                    <h3>📜 Transaction History</h3>
+                    ${txs.length === 0 ? 'No transactions yet.' : txs.map(t => {
+                        const isCredit = t.toIpb === user.ipbn;
+                        const counterpart = isCredit ? t.fromName : t.toName;
+                        return `<div style="border-bottom:1px solid #eee; padding:8px; display:flex; justify-content:space-between;">
+                            <span>${isCredit ? '+' : '-'} ${formatCurrency(t.amount, user.region)}</span>
+                            <span style="font-size:0.7rem;">${counterpart}</span>
+                        </div>`;
+                    }).join('')}
+                </div>`;
+        }
+        function showNotificationsView() {
+            const user = getCurrentUser(); if (!user) return;
+            const notifs = getNotifications().filter(n => n.userIpb === user.ipbn || n.userIpb === 'all').slice(-20).reverse();
+            document.getElementById('dashboardSubView').innerHTML = `
+                <div class="card">
+                    <h3>🔔 Notifications</h3>
+                    ${notifs.length === 0 ? 'No notifications.' : notifs.map(n => `
+                        <div style="border-bottom:1px solid #eee; padding:8px;">
+                            <strong>${n.title}</strong><br>
+                            <span style="font-size:0.7rem;">${n.body}</span>
+                            <div style="font-size:0.6rem; color:#777;">${new Date(n.createdAt).toLocaleString()} · From: ${n.from}</div>
+                        </div>`).join('')}
+                </div>`;
+        }
+
+        function requestAccountDeletion() {
+            if (!confirm('Request account deletion?')) return;
+            const user = getCurrentUser(); if (!user) return;
+            const reqs = getRequests();
+            reqs.push({ id: generateId(), type: 'delete_user', userIpb: user.ipbn, userName: user.name, status: 'pending', createdAt: new Date().toISOString() });
+            saveRequests(reqs);
+            showToast('Deletion request sent to Central Bank', 'info');
+            addAdminLog('Deletion Request', user.name);
+        }
+
+        // ==================== TRANSFER ====================
+        function openTransferModal() { document.getElementById('transferModal').classList.add('active'); }
+        function closeTransferModal() { document.getElementById('transferModal').classList.remove('active'); }
+        function processTransfer() {
+            const toIpb = document.getElementById('transferIpb').value.trim().toUpperCase();
+            const amt = parseFloat(document.getElementById('transferAmount').value);
+            const user = getCurrentUser();
+            if (!user || !toIpb || !amt || amt <= 0) { showToast('Invalid details', 'danger'); return; }
+            if (toIpb === user.ipbn) { showToast('Cannot send to yourself', 'danger'); return; }
+            const users = getUsers();
+            const toIdx = users.findIndex(u => u.ipbn === toIpb && u.active !== false);
+            if (toIdx === -1) { showToast('Recipient not found', 'danger'); return; }
+            if (user.balance < amt) { showToast('Insufficient balance', 'danger'); return; }
+            // Daily transaction limit check (outgoing)
+            const today = new Date().toDateString();
+            const dailyOut = getTransactions().filter(t => t.fromIpb === user.ipbn && new Date(t.createdAt).toDateString() === today).reduce((sum, t) => sum + t.amount, 0);
+            if (dailyOut + amt > DAILY_TRANSFER_LIMIT) { showToast('Daily transfer limit exceeded (10,00,000)', 'danger'); return; }
+            const senderIdx = users.findIndex(u => u.ipbn === user.ipbn);
+            users[senderIdx].balance -= amt;
+            users[toIdx].balance += amt;
+            saveUsers(users);
+            const txs = getTransactions();
+            txs.push({
+                id: generateId(), fromIpb: user.ipbn, fromName: user.name,
+                toIpb: toIpb, toName: users[toIdx].name, amount: amt,
+                currency: getCurrencyForRegion(user.region).code, createdAt: new Date().toISOString()
+            });
+            saveTransactions(txs);
+            closeTransferModal();
+            // Show success popup with tick animation and bubble sound
+            showSuccessPopup(`Sent ${formatCurrency(amt, user.region)} to ${users[toIdx].name}`);
+            showDashboard();
+            addAdminLog('Transfer', `${user.name} -> ${users[toIdx].name} (${amt})`);
+            // Notify recipient
+            const notifs = getNotifications();
+            notifs.push({
+                id: generateId(), userIpb: toIpb, title: '💸 Money Received',
+                body: `You received ${formatCurrency(amt, users[toIdx].region)} from ${user.name}`,
+                from: 'CRESTLINK PAY', read: false, createdAt: new Date().toISOString()
+            });
+            saveNotifications(notifs);
+        }
+
+        // ==================== LOAN ====================
+        function openLoanModal() { document.getElementById('loanModal').classList.add('active'); }
+        function closeLoanModal() { document.getElementById('loanModal').classList.remove('active'); }
+        function submitLoanRequest() {
+            const amt = parseFloat(document.getElementById('loanAmount').value);
+            const purpose = document.getElementById('loanPurpose').value.trim();
+            const user = getCurrentUser(); if (!user) return;
+            if (!amt || amt < LOAN_MIN || amt > LOAN_MAX) { showToast(`Loan amount must be between 100 and 1,00,00,000`, 'danger'); return; }
+            if (amt > user.loanLimit) { showToast(`Maximum loan limit is ${formatCurrency(user.loanLimit, user.region)}`, 'danger'); return; }
+            const loans = getLoans();
+            loans.push({ id: generateId(), userIpb: user.ipbn, userName: user.name, amount: amt, purpose, status: 'pending', createdAt: new Date().toISOString() });
+            saveLoans(loans);
+            closeLoanModal();
+            showToast('Loan request submitted', 'success');
+            addAdminLog('Loan Request', `${user.name} (${amt}) - ${purpose.substring(0,30)}`);
+            showLoanView();
+        }
+
+        // ==================== ADMIN ====================
+        function handleAdminLogin() {
+            if (document.getElementById('adminMasterKey').value === MASTER_KEY) {
+                setAdminLoggedIn(true);
+                showScreen('adminDashboardScreen');
+                switchAdminTab('users');
+                addAdminLog('Admin Login', 'Master key accepted');
+                document.getElementById('adminMasterKey').value = '';
+            } else {
+                showToast('Incorrect master key', 'danger');
+            }
+        }
+        function setAdminLoggedIn(v) { localStorage.setItem('crestlink_admin_logged_in', v ? 'true' : 'false'); }
+        function adminLogout() { setAdminLoggedIn(false); showScreen('loginScreen'); }
+
+        function switchAdminTab(tab) {
+            document.querySelectorAll('#adminTabs .tab').forEach(t => {
+                t.style.background = t.dataset.tab === tab ? '#d9e2ff' : 'transparent';
+            });
+            const content = document.getElementById('adminTabContent');
+            if (!content) return;
+            const users = getUsers(), txs = getTransactions(), reqs = getRequests(), loans = getLoans(), notifs = getNotifications(), currencies = getCurrencies();
+            switch (tab) {
+                case 'users':
+                    content.innerHTML = `<div class="card"><h3>👥 All Users (${users.length})</h3>
+                        <table class="admin-table"><tr><th>IPBN</th><th>Name</th><th>Balance</th><th>Status</th><th>Actions</th></tr>
+                        ${users.map(u => `<tr>
+                            <td>${u.ipbn}</td><td>${u.name}</td><td>${formatCurrency(u.balance, u.region)}</td>
+                            <td><span class="badge ${u.active !== false ? 'badge-success' : 'badge-danger'}">${u.active !== false ? 'Active' : 'Inactive'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline" onclick="adminAdjustBalance('${u.ipbn}','add')">+</button>
+                                <button class="btn btn-sm btn-outline" onclick="adminAdjustBalance('${u.ipbn}','debit')">-</button>
+                                <button class="btn btn-sm btn-outline" onclick="adminEditUser('${u.ipbn}')">Edit</button>
+                                <button class="btn btn-sm btn-outline" onclick="adminToggleUser('${u.ipbn}')">Toggle</button>
+                            </td>
+                        </tr>`).join('')}
+                        </table></div>`;
+                    break;
+                case 'transactions':
+                    content.innerHTML = `<div class="card"><h3>📜 All Transactions (${txs.length})</h3>
+                        ${txs.slice().reverse().map(t => `<div style="border-bottom:1px solid #eee; padding:6px;">
+                            ${new Date(t.createdAt).toLocaleString()} — ${t.fromName} → ${t.toName}: ${formatCurrency(t.amount, getCurrencyForRegion(getUsers().find(u=>u.ipbn===t.fromIpb)?.region || 'India'))}
+                        </div>`).join('')}</div>`;
+                    break;
+                case 'requests':
+                    const pending = reqs.filter(r => r.status === 'pending');
+                    content.innerHTML = `<div class="card"><h3>📋 Pending Requests (${pending.length})</h3>
+                        ${pending.length === 0 ? 'No pending requests.' : pending.map(r => `<div style="border-bottom:1px solid #eee; padding:8px;">
+                            <strong>${r.type.replace('_',' ')}</strong> — ${r.userName} (${r.userIpb})
+                            ${r.type === 'change_spc' ? `<div>New SPC: ${r.newSpc}</div>` : ''}
+                            <button class="btn btn-sm btn-gold" onclick="adminApproveRequest('${r.id}')">Approve</button>
+                            <button class="btn btn-sm btn-danger" onclick="adminDenyRequest('${r.id}')">Deny</button>
+                        </div>`).join('')}</div>`;
+                    break;
+                case 'loans':
+                    const pendingLoans = loans.filter(l => l.status === 'pending');
+                    content.innerHTML = `<div class="card"><h3>🏦 Loan Requests (${pendingLoans.length} pending)</h3>
+                        ${pendingLoans.length === 0 ? 'No pending loans.' : pendingLoans.map(l => `<div style="border-bottom:1px solid #eee; padding:8px;">
+                            <strong>${l.userName}</strong> — ${formatCurrency(l.amount, getCurrencyForRegion(getUsers().find(u=>u.ipbn===l.userIpb)?.region || 'India'))} 
+                            <div style="font-size:0.7rem;">${l.purpose || 'No purpose'}</div>
+                            <button class="btn btn-sm btn-gold" onclick="adminApproveLoan('${l.id}')">Approve</button>
+                            <button class="btn btn-sm btn-danger" onclick="adminDenyLoan('${l.id}')">Deny</button>
+                        </div>`).join('')}</div>`;
+                    break;
+                case 'logs':
+                    const logs = getAdminLogs();
+                    content.innerHTML = `<div class="card"><h3>🔐 Server Logs (Admin only)</h3>
+                        ${logs.length === 0 ? 'No logs yet.' : logs.slice(-30).reverse().map(l => `<div style="font-size:0.75rem; border-bottom:1px solid #eee; padding:4px;">
+                            ${l.timestamp} — ${l.action}: ${l.detail || ''}
+                        </div>`).join('')}</div>`;
+                    break;
+                case 'currencies':
+                    content.innerHTML = `<div class="card"><h3>💱 Currency Management</h3>
+                        <table class="admin-table"><tr><th>Region</th><th>Code</th><th>Symbol</th><th>Rate (vs INR)</th></tr>
+                        ${Object.entries(currencies).map(([region, c]) => `<tr>
+                            <td>${region}</td><td>${c.code}</td><td>${c.symbol}</td>
+                            <td><input type="number" step="0.0001" value="${c.rate}" style="width:70px;" onchange="adminUpdateCurrencyRate('${region}', this.value)"></td>
+                        </tr>`).join('')}
+                        </table></div>`;
+                    break;
+                default: content.innerHTML = '';
+            }
+        }
+
+        function adminAdjustBalance(ipbn, action) {
+            const amt = parseFloat(prompt('Amount:'));
+            if (!amt || amt <= 0) return;
+            const users = getUsers();
+            const idx = users.findIndex(u => u.ipbn === ipbn);
+            if (idx === -1) return;
+            if (action === 'add') { users[idx].balance += amt; showToast(`Added ${formatCurrency(amt, users[idx].region)} to ${users[idx].name}`); }
+            else { if (users[idx].balance < amt) { showToast('Insufficient balance'); return; } users[idx].balance -= amt; showToast(`Debited ${formatCurrency(amt, users[idx].region)} from ${users[idx].name}`); }
+            saveUsers(users);
+            switchAdminTab('users');
+            addAdminLog('Balance Adjust', `${ipbn} ${action} ${amt}`);
+        }
+        function adminToggleUser(ipbn) {
+            const users = getUsers();
+            const idx = users.findIndex(u => u.ipbn === ipbn);
+            if (idx === -1) return;
+            users[idx].active = users[idx].active === false ? true : false;
+            saveUsers(users);
+            switchAdminTab('users');
+            addAdminLog('Toggle User', ipbn);
+        }
+        function adminEditUser(ipbn) {
+            const user = getUsers().find(u => u.ipbn === ipbn);
+            if (!user) return;
+            const newName = prompt('Edit Full Name:', user.name);
+            if (newName === null) return;
+            const newEmail = prompt('Edit Email/Phone:', user.email);
+            if (newEmail === null) return;
+            const newDob = prompt('Edit DOB (DD/MM/YYYY):', user.dob);
+            if (newDob === null) return;
+            const newRegion = prompt('Edit Region (India, USA, UK, etc):', user.region);
+            if (newRegion === null) return;
+            const newSpc = prompt('Edit SPC:', user.spc);
+            if (newSpc === null) return;
+            const newMpin = prompt('Edit MPIN (4 digits):', user.mpin);
+            if (newMpin === null) return;
+            if (!/^\d{2}\/\d{2}\/\d{4}$/.test(newDob)) { showToast('Invalid DOB format', 'danger'); return; }
+            if (newSpc.length < 4) { showToast('SPC too short', 'danger'); return; }
+            if (newMpin && newMpin.length !== 4) { showToast('MPIN must be 4 digits', 'danger'); return; }
+            const users = getUsers();
+            const idx = users.findIndex(u => u.ipbn === ipbn);
+            if (idx === -1) return;
+            users[idx].name = newName;
+            users[idx].email = newEmail;
+            users[idx].dob = newDob;
+            users[idx].region = newRegion;
+            users[idx].spc = newSpc;
+            if (newMpin) users[idx].mpin = newMpin;
+            saveUsers(users);
+            switchAdminTab('users');
+            addAdminLog('Edit User', `${ipbn} details updated`);
+            showToast('User details updated', 'success');
+        }
+        function adminApproveRequest(reqId) {
+            const reqs = getRequests();
+            const idx = reqs.findIndex(r => r.id === reqId);
+            if (idx === -1) return;
+            const req = reqs[idx];
+            const users = getUsers();
+            const userIdx = users.findIndex(u => u.ipbn === req.userIpb);
+            if (req.type === 'delete_user' && userIdx !== -1) { users[userIdx].active = false; saveUsers(users); }
+            else if (req.type === 'change_spc' && userIdx !== -1) { users[userIdx].spc = req.newSpc; saveUsers(users); }
+            reqs[idx].status = 'approved';
+            saveRequests(reqs);
+            addAdminLog('Approve Request', `${req.type} for ${req.userName}`);
+            switchAdminTab('requests');
+        }
+        function adminDenyRequest(reqId) {
+            const reqs = getRequests();
+            const idx = reqs.findIndex(r => r.id === reqId);
+            if (idx === -1) return;
+            reqs[idx].status = 'denied';
+            saveRequests(reqs);
+            addAdminLog('Deny Request', reqs[idx].type);
+            switchAdminTab('requests');
+        }
+        function adminApproveLoan(loanId) {
+            const loans = getLoans();
+            const idx = loans.findIndex(l => l.id === loanId);
+            if (idx === -1) return;
+            const loan = loans[idx];
+            const users = getUsers();
+            const userIdx = users.findIndex(u => u.ipbn === loan.userIpb);
+            if (userIdx !== -1) { users[userIdx].balance += loan.amount; saveUsers(users); }
+            loans[idx].status = 'approved';
+            saveLoans(loans);
+            addAdminLog('Approve Loan', `${loan.userName} (${loan.amount})`);
+            switchAdminTab('loans');
+        }
+        function adminDenyLoan(loanId) {
+            const loans = getLoans();
+            const idx = loans.findIndex(l => l.id === loanId);
+            if (idx === -1) return;
+            loans[idx].status = 'denied';
+            saveLoans(loans);
+            addAdminLog('Deny Loan', loanId);
+            switchAdminTab('loans');
+        }
+        function adminUpdateCurrencyRate(region, rate) {
+            const currencies = getCurrencies();
+            if (currencies[region]) {
+                currencies[region].rate = parseFloat(rate) || currencies[region].rate;
+                saveCurrencies(currencies);
+                showToast(`${region} rate updated`);
+                addAdminLog('Currency Update', `${region} rate = ${rate}`);
+            }
+        }
+
+        // logout user
+        function logoutUser() { localStorage.removeItem('crestlink_current_user'); showScreen('loginScreen'); }
+
+        // handle modal close on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>
